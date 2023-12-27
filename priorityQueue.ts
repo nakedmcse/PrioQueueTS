@@ -27,6 +27,54 @@ class SimpleQueue<T> implements IQueue<T> {
     }
 }
 
+// Inverted simple queue
+class InvertedQueue<T> implements IQueue<T> {
+    private queueData: T[] = [];
+    
+    public get empty(): boolean {
+        return this.queueData.length<=0;
+    }
+
+    public get size(): number {
+        return this.queueData.length;
+    }
+
+    public enqueue(dataItem: T, priority:number = 1): void {
+        this.queueData.unshift(dataItem);
+    }
+
+    public dequeue(): T | null {
+        return this.empty ? null : this.queueData.pop() ?? null;
+    }
+}
+
+// Set based simple queue -- @VictoriqueM
+class SimpleQueueSet<T> implements IQueue<T> {
+    private queueData: Set<T> = new Set();
+
+    public get empty(): boolean {
+        return this.queueData.size <= 0;
+    }
+
+    public get size(): number {
+        return this.queueData.size;
+    }
+
+    public enqueue(dataItem: T, priority: number = 1): void {
+        this.queueData.add(dataItem);
+    }
+
+    public dequeue(): T | null {
+        return this.empty ? null : this.shiftSet() ?? null;
+    }
+
+    private shiftSet() {
+        const firstValue = this.queueData.values().next().value;
+        this.queueData.delete(firstValue);
+        return firstValue;
+    }
+}
+
 // Simple implementation using [T,prio] and sort
 class SimplePriorityQueue<T> implements IQueue<T> {
     private queueData: [prio:number,value:T][] = [];
@@ -83,6 +131,41 @@ class MapPriorityQueue<T> implements IQueue<T> {
     }
 }
 
+// Record based implementation -- @VictoriqueM
+class RecordPriorityQueue<T> implements IQueue<T> {
+    private queueData: Record<number, T[]> = {}
+
+    public get empty(): boolean {
+        return Object.keys(this.queueData).length === 0;
+    }
+
+    public get size(): number {
+        return Object.keys(this.queueData).length;
+    }
+
+    public enqueue(dataItem: T, priority: number = 1): void {
+        const qdata: T[] = this.queueData[priority] ?? [];
+        qdata.push(dataItem);
+        this.queueData[priority] = qdata;
+    }
+
+    public dequeue(): T | null {
+        if (this.empty){
+            return null;
+        }
+        const keys = Object.keys(this.queueData).map(v => Number.parseInt(v));
+        const priority: number = Math.max(...keys);
+        const qdata: T[] = this.queueData[priority] ?? [];
+        const item: T | null = qdata.shift() ?? null;
+        if (qdata.length === 0) {
+            delete this.queueData[priority];
+        } else {
+            this.queueData[priority] = qdata;
+        }
+        return item ?? null;
+    }
+}
+
 const range:number = 10000;
 let start:number = 0, end:number = 0, count:number = 0;
 let testOut:string = '';
@@ -105,6 +188,46 @@ while(!simpleQ.empty) {
 end = performance.now()
 console.log("Simple queue dequeued items:",count);
 console.log("Simple queue dequeue time:", end-start);
+console.log("-----");
+
+// Inverted queue
+const invertedQ = new InvertedQueue();
+start = performance.now();
+for(let i=0; i<range; i++) {
+    invertedQ.enqueue(Math.random()*range);
+}
+end = performance.now()
+console.log("Inverted queue enqueue time:", end-start);
+
+start = performance.now();
+count = 0;
+while(!invertedQ.empty) {
+    invertedQ.dequeue();
+    count++;
+}
+end = performance.now()
+console.log("Inverted queue dequeued items:",count);
+console.log("Inverted queue dequeue time:", end-start);
+console.log("-----");
+
+// Inverted queue
+const setQ = new SimpleQueueSet();
+start = performance.now();
+for(let i=0; i<range; i++) {
+    setQ.enqueue(Math.random()*range);
+}
+end = performance.now()
+console.log("Set queue enqueue time:", end-start);
+
+start = performance.now();
+count = 0;
+while(!setQ.empty) {
+    setQ.dequeue();
+    count++;
+}
+end = performance.now()
+console.log("Set queue dequeued items:",count);
+console.log("Set queue dequeue time:", end-start);
 console.log("-----");
 
 // Simple priority queue
@@ -172,4 +295,38 @@ while(!mapPrioQ.empty) {
 end = performance.now()
 console.log("Map priority queue dequeued items:",count);
 console.log("Map priority queue dequeue time:", end-start);
+console.log("-----");
+
+// Record priority queue
+const recordQ = new RecordPriorityQueue();
+
+console.log("Record Priority Enqueued 1:1,2:1,3:1,4:5,5:9");
+recordQ.enqueue(1,1);
+recordQ.enqueue(2,1);
+recordQ.enqueue(3,1);
+recordQ.enqueue(4,5);
+recordQ.enqueue(5,9);
+
+testOut = '';
+while(!recordQ.empty) {
+    testOut += " " + recordQ.dequeue();
+}
+console.log("Record Priority Queue Dequeued:",testOut); 
+
+start = performance.now();
+for(let i=0; i<range; i++) {
+    recordQ.enqueue(Math.random()*range,Math.floor(Math.random()*9)+1);
+}
+end = performance.now()
+console.log("Record Priority queue enqueue time:", end-start);
+
+start = performance.now();
+count = 0;
+while(!recordQ.empty) {
+    recordQ.dequeue();
+    count++;
+}
+end = performance.now()
+console.log("Record priority queue dequeued items:",count);
+console.log("Record priority queue dequeue time:", end-start);
 console.log("-----");
