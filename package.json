@@ -4,11 +4,15 @@
   "description": "Random TS Stuff",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "ts-node-esm priorityQueue.ts"
   },
   "author": "Walker",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^20.10.5"
+    "@types/node": "^20.10.5",
+    "ts-node": "^10.9.2"
+  },
+  "dependencies": {
+    "@datastructures-js/priority-queue": "^6.3.0"
   }
 }
